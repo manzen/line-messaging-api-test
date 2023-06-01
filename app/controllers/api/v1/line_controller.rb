@@ -30,14 +30,20 @@ class Api::V1::LineController < ApplicationController
 
   ## このmethodを要件に合わせて修正する
   def response_messeage(event)
+    ## TODO 暇なときに処理を分離する
     ## OpenAIの処理
-    client = OpenAI::Client.new(access_token: ENV["CHATGPT_API_KEY"])
-    response = client.chat(
-      parameters: {
-          model: "gpt-3.5-turbo",
-          messages: [{ role: "user", content: event.message['text'] }],
-      })
-    chats = response.dig("choices", 0, "message", "content")
-    { type: 'text', text: chats }
+    begin
+      client = OpenAI::Client.new(access_token: ENV["CHATGPT_API_KEY"])
+      response = client.chat(
+        parameters: {
+            model: "gpt-3.5-turbo",
+            messages: [{ role: "user", content: event.message['text'] }],
+        })
+      chats = response.dig("choices", 0, "message", "content")
+      { type: 'text', text: chats }
+    rescue => e
+      logger.error e
+      { type: 'text', text: "返事がない。ただの屍のようだ。" }
+    end
   end
 end
